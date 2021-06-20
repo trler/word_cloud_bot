@@ -1,11 +1,12 @@
 from telegram.ext import Updater
 from config import TOKEN
-from func import start_handler, chat_content_handler, check_schedule, rank_handler
+from func import start_handler, ping_handler, chat_content_handler, check_schedule, rank_handler
 import schedule
 from task import schedule_task, flush_redis, do_task
 import threading
 
-schedule.every().day.at('11:00').do(schedule_task)
+# 开始定时任务 - 群组分析
+schedule.every().day.at('12:00').do(schedule_task)
 schedule.every().day.at('18:00').do(schedule_task)
 schedule.every().day.at('23:30').do(schedule_task)
 schedule.every().day.at('23:59').do(flush_redis)
@@ -22,6 +23,7 @@ updater = Updater(token=TOKEN, use_context=True)
 dispatcher = updater.dispatcher
 
 dispatcher.add_handler(start_handler)
+dispatcher.add_handler(ping_handler)
 dispatcher.add_handler(rank_handler)
 dispatcher.add_handler(chat_content_handler)
 

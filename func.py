@@ -3,7 +3,7 @@ import time
 import connector
 import telegram
 from telegram.ext import CommandHandler, MessageHandler, Filters
-from config import TOKEN, LIMIT_COUNT, EXCLUSIVE_MODE, RANK_COMMAND_MODE
+from config import TOKEN, LIMIT_COUNT, EXCLUSIVE_MODE, RANK_COMMAND_MODE, OWNER, EXCLUSIVE_LIST, CHANNEL, HELP
 import schedule
 from task import add_task
 
@@ -11,17 +11,37 @@ bot = telegram.Bot(token=TOKEN)
 
 
 def start(update, context):
+    # 限制不为群组
+    chat_type = update.effective_chat.type
+    if chat_type == "supergroup":
+        return
     try:
         connector.get_connection().keys()
-        print('进入start函数')
+        print('进入 start 函数')
         update.message.reply_text(
-            '在呢！系统运行正常~',
+            HELP,
+            parse_mode='HTML'
         )
     except Exception as e:
         print(e)
         print('进入start函数')
-        update.message.reply_text("系统故障，Redis连接失败，请检查！")
-        update.message.reply_text("错误信息：" + str(e))
+        if update.effective_user.id == OWNER:
+            update.message.reply_text(f"系统故障，Redis连接失败，错误信息：\n{e}")
+
+
+def ping(update, context):
+    # 限制不为群组
+    chat_type = update.effective_chat.type
+    if chat_type == "supergroup":
+        return
+    try:
+        connector.get_connection().keys()
+        print('进入 ping 函数')
+        update.message.reply_text(
+            'pong~',
+        )
+    except Exception as e:
+        print(e)
 
 
 def rank(update, context):
@@ -36,9 +56,9 @@ def rank(update, context):
             username = update.effective_user.id
         # 限制为群组
         if chat_type != "supergroup":
-            update.message.reply_text("此命令只有在群组中有效")
+            update.message.reply_text("此命令只有在群组中有效！")
             return
-        if RANK_COMMAND_MODE == 1:
+        if RANK_COMMAND_MODE:
             try:
                 chat_member = bot.get_chat_member(chat_id, user_id)
                 status = chat_member["status"]
@@ -46,7 +66,6 @@ def rank(update, context):
                 if status == "creator" or status == "administrator":
                     print("用户权限正确")
                 else:
-                    update.message.reply_text("此命令仅对管理员开放")
                     return
             except Exception as e:
                 print(e)
@@ -71,6 +90,12 @@ def rank(update, context):
             return
         add_task(chat_id)
         print("群组: {}，用户: {}|{} 发起了主动触发请求".format(chat_id, username, user_id, ))
+        if not CHANNEL == 0:
+            ctext = f'#WORDCLOUD #APPLY \n' \
+                    f'群组 ID：`{chat_id}`\n' \
+                    f'用户 ID：`{user_id}`\n' \
+                    f'执行操作：`主动生成词云`'
+            bot.send_message(chat_id=CHANNEL, text=ctext, parse_mode="Markdown")
         update.message.reply_text("统计数据将在分析完毕后发送到当前群组，请稍等~")
     except Exception as e:
         print("主动触发任务失败，请检查")
@@ -91,30 +116,19 @@ def chat_content_exec(update, context):
         if len(text) > 80:
             return
         # 独享模式（仅授权群组可用）
-        if EXCLUSIVE_MODE == 1 and chat_id not in ["1231242141"]:
+        if EXCLUSIVE_MODE and chat_id not in EXCLUSIVE_LIST:
             print(chat_id + " 为未认证群组，取消入库")
             return
-        try:
-            username = update.effective_user.username
-        except Exception as e:
-            username = update.effective_user.id
         user = update.message.from_user
         firstname = str(user["first_name"])
-        lastname = str(user["last_name"])
-        name = ""
-        if firstname != "None":
-            name = firstname + " "
-        if lastname != "None":
-            name += lastname
-        if len(name) == 0:
-            name = username
+        name = firstname
         print("\n---------------------------")
         print("内容: " + text[:10])
         print("群组类型: " + str(chat_type))
         print("用户ID: " + str(user_id))
         print("chat_id: " + str(chat_id))
-        if "/" in text:
-            print("这是一条指令信息，跳过")
+        if text.startswith('/') or '//' in text:
+            print("这是一条指令或者链接信息，跳过")
             return
         else:
             if text[-1] not in ["，", "。", "！", "：", "？", "!", "?", ",", ":", "."]:
@@ -136,5 +150,6 @@ def check_schedule():
 
 
 start_handler = CommandHandler('start', start)
+ping_handler = CommandHandler('ping', ping)
 rank_handler = CommandHandler('rank', rank)
 chat_content_handler = MessageHandler(Filters.text, chat_content_exec)
