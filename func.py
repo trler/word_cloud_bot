@@ -20,6 +20,7 @@ def start(update, context):
         print('进入 start 函数')
         update.message.reply_text(
             HELP,
+            parse_mode='HTML'
         )
     except Exception as e:
         print(e)
