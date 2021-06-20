@@ -3,7 +3,7 @@ import time
 import connector
 import telegram
 from telegram.ext import CommandHandler, MessageHandler, Filters
-from config import TOKEN, LIMIT_COUNT, EXCLUSIVE_MODE, RANK_COMMAND_MODE, OWNER, EXCLUSIVE_LIST, CHANNEL
+from config import TOKEN, LIMIT_COUNT, EXCLUSIVE_MODE, RANK_COMMAND_MODE, OWNER, EXCLUSIVE_LIST, CHANNEL, HELP
 import schedule
 from task import add_task
 
@@ -17,15 +17,30 @@ def start(update, context):
         return
     try:
         connector.get_connection().keys()
-        print('进入start函数')
+        print('进入 start 函数')
         update.message.reply_text(
-            'pong~',
+            HELP,
         )
     except Exception as e:
         print(e)
         print('进入start函数')
         if update.effective_user.id == OWNER:
             update.message.reply_text(f"系统故障，Redis连接失败，错误信息：\n{e}")
+
+
+def ping(update, context):
+    # 限制不为群组
+    chat_type = update.effective_chat.type
+    if chat_type == "supergroup":
+        return
+    try:
+        connector.get_connection().keys()
+        print('进入 ping 函数')
+        update.message.reply_text(
+            'pong~',
+        )
+    except Exception as e:
+        print(e)
 
 
 def rank(update, context):
@@ -134,5 +149,6 @@ def check_schedule():
 
 
 start_handler = CommandHandler('start', start)
+ping_handler = CommandHandler('ping', ping)
 rank_handler = CommandHandler('rank', rank)
 chat_content_handler = MessageHandler(Filters.text, chat_content_exec)

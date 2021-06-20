@@ -1,6 +1,6 @@
 from telegram.ext import Updater
 from config import TOKEN
-from func import start_handler, chat_content_handler, check_schedule, rank_handler
+from func import start_handler, ping_handler, chat_content_handler, check_schedule, rank_handler
 import schedule
 from task import schedule_task, flush_redis, do_task
 import threading
@@ -23,6 +23,7 @@ updater = Updater(token=TOKEN, use_context=True)
 dispatcher = updater.dispatcher
 
 dispatcher.add_handler(start_handler)
+dispatcher.add_handler(ping_handler)
 dispatcher.add_handler(rank_handler)
 dispatcher.add_handler(chat_content_handler)
 
