@@ -133,7 +133,7 @@ def stat(update, context):
             r.expireat("{}_{}_frequency_limit".format(chat_id, user_id), ex_time)
         count = int(r.get("{}_{}_frequency_limit".format(chat_id, user_id)))
         if count > LIMIT_COUNT:
-            update.message.reply_text("您在这个小时内的生成配额已经用完，请稍后再试~")
+            update.message.reply_text(f"[您](tg://user?id={user_id})在这个小时内的生成配额已经用完，请稍后再试~")
             return
         add_user_task(chat_id, user_id)
         print("群组: {}，用户: {} | {} 发起了主动触发请求".format(chat_id, username, user_id, ))

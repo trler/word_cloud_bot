@@ -289,7 +289,7 @@ def generate_user(group, uid):
                 hot_word_string += "\t\t\t\t\t\t\t\t" + "👥 `" + str(word_amount[i][0]) + "`" + "：" + str(
                     word_amount[i][1]) + "\n"
             # print(hot_word_string)
-            text += f"🗣️ 此成员共产生 {total_message_amount} 条纯文本消息\n" \
+            text += f"🗣️ [此成员](tg://user?id={uid})共产生 {total_message_amount} 条纯文本消息\n" \
                     f"🤹‍ Ta 今天讨论最多的是：\n\n{hot_word_string}\n"
         else:
             text += '无法分析出 Ta 的热词列表，可能是数据量过小，嗨起来吧~\n'
