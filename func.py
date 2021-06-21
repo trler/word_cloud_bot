@@ -127,7 +127,7 @@ def chat_content_exec(update, context):
         print("群组类型: " + str(chat_type))
         print("用户ID: " + str(user_id))
         print("chat_id: " + str(chat_id))
-        if text.startswith('/') or '//' in text:
+        if text.startswith('/') or '//' in text or text.startswith('-'):
             print("这是一条指令或者链接信息，跳过")
             return
         else:
