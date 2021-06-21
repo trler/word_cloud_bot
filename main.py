@@ -1,8 +1,8 @@
 from telegram.ext import Updater
 from config import TOKEN
-from func import start_handler, ping_handler, chat_content_handler, check_schedule, rank_handler
+from func import start_handler, ping_handler, chat_content_handler, check_schedule, rank_handler, stat_handler
 import schedule
-from task import schedule_task, flush_redis, do_task
+from task import schedule_task, flush_redis, do_task, do_user_task
 import threading
 
 # 开始定时任务 - 群组分析
@@ -14,8 +14,9 @@ schedule.every().day.at('23:59').do(flush_redis)
 # 测试代码，每分钟推送数据，非测试目的不要取消注释下一行
 # schedule.every(1).minutes.do(schedule_task)
 
-# 开启分析线程，当队列中由任务时，会取出任务分析生成数据
+# 开启分析线程，当队列中有任务时，会取出任务分析生成数据
 threading.Thread(target=do_task).start()
+threading.Thread(target=do_user_task).start()
 
 threading.Thread(target=check_schedule).start()
 
@@ -25,6 +26,7 @@ dispatcher = updater.dispatcher
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(ping_handler)
 dispatcher.add_handler(rank_handler)
+dispatcher.add_handler(stat_handler)
 dispatcher.add_handler(chat_content_handler)
 
 updater.start_polling()
