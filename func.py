@@ -5,7 +5,7 @@ import telegram
 from telegram.ext import CommandHandler, MessageHandler, Filters
 from config import TOKEN, LIMIT_COUNT, EXCLUSIVE_MODE, RANK_COMMAND_MODE, OWNER, EXCLUSIVE_LIST, CHANNEL, HELP
 import schedule
-from task import add_task
+from task import add_task, add_user_task
 
 bot = telegram.Bot(token=TOKEN)
 
@@ -102,6 +102,53 @@ def rank(update, context):
         print(e)
 
 
+def stat(update, context):
+    try:
+        r = connector.get_connection()
+        chat_type = update.effective_chat.type
+        user_id = update.effective_user.id
+        chat_id = update.effective_message.chat_id
+        try:
+            username = update.effective_user.username
+        except Exception as e:
+            username = update.effective_user.id
+        # 限制为群组
+        if chat_type != "supergroup":
+            update.message.reply_text("此命令只有在群组中有效！")
+            return
+        if r.exists("{}_{}_frequency_limit".format(chat_id, user_id)):
+            r.setrange("{}_{}_frequency_limit".format(chat_id, user_id), 0,
+                       int(r.get("{}_{}_frequency_limit".format(chat_id, user_id))) + 1)
+        else:
+            struct_time = time.localtime(time.time())
+            # 数据过期时间为当前小时的 59 分
+            ex_time = datetime.datetime(
+                struct_time.tm_year,
+                struct_time.tm_mon,
+                struct_time.tm_mday,
+                struct_time.tm_hour,
+                59
+            )
+            r.set("{}_{}_frequency_limit".format(chat_id, user_id), 1)
+            r.expireat("{}_{}_frequency_limit".format(chat_id, user_id), ex_time)
+        count = int(r.get("{}_{}_frequency_limit".format(chat_id, user_id)))
+        if count > LIMIT_COUNT:
+            update.message.reply_text(f"[您](tg://user?id={user_id})在这个小时内的生成配额已经用完，请稍后再试~")
+            return
+        add_user_task(chat_id, user_id)
+        print("群组: {}，用户: {} | {} 发起了主动触发请求".format(chat_id, username, user_id, ))
+        if not CHANNEL == 0:
+            ctext = f'#WORDCLOUD #APPLY #id{user_id} \n' \
+                    f'群组 ID：`{chat_id}`\n' \
+                    f'用户 ID：`{user_id}`\n' \
+                    f'执行操作：`主动生成用户词云`'
+            bot.send_message(chat_id=CHANNEL, text=ctext, parse_mode="Markdown")
+        update.message.reply_text("统计数据将在分析完毕后发送到当前群组，请稍等~")
+    except Exception as e:
+        print("主动触发任务失败，请检查")
+        print(e)
+
+
 def chat_content_exec(update, context):
     try:
         r = connector.get_connection()
@@ -133,9 +180,12 @@ def chat_content_exec(update, context):
         else:
             if text[-1] not in ["，", "。", "！", "：", "？", "!", "?", ",", ":", "."]:
                 r.append("{}_chat_content".format(chat_id), text + "。")
+                r.append("{}_{}_user_content".format(chat_id, user_id), text + "。")
             else:
                 r.append("{}_chat_content".format(chat_id), text)
+                r.append("{}_{}_user_content".format(chat_id, user_id), text)
             r.incrby("{}_total_message_amount".format(chat_id))
+            r.incrby("{}_{}_user_message_amount".format(chat_id, user_id))
             r.hincrby("{}_user_message_amount".format(chat_id), name)
         print("---------------------------")
     except Exception as e:
@@ -152,4 +202,5 @@ def check_schedule():
 start_handler = CommandHandler('start', start)
 ping_handler = CommandHandler('ping', ping)
 rank_handler = CommandHandler('rank', rank)
+stat_handler = CommandHandler('stat', stat)
 chat_content_handler = MessageHandler(Filters.text, chat_content_exec)

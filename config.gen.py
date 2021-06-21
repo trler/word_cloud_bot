@@ -25,5 +25,6 @@ OWNER = 0
 CHANNEL = 0
 
 # 帮助信息
-HELP = '<b>Group Word Cloud Bot</b>\n\n/start - 查看此帮助信息\n/ping - 我还活着吗？\n/rank - 手动生成词云（绒布球）\n\n' \
+HELP = '<b>Group Word Cloud Bot</b>\n\n/start - 查看此帮助信息\n/ping - 我还活着吗？\n/rank - 手动生成词云（绒布球）\n' \
+       '/stat - 生成单用户词云\n\n' \
        '此项目开源于：https://git.io/JnrvH'
