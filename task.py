@@ -80,7 +80,7 @@ def do_user_task():
             stop_time = float(time.time())
             print("当前群组处理耗时：" + str(stop_time - start_time))
             print("---------------------------")
-            ctext = f'#WORDCLOUD #{uid} \n' \
+            ctext = f'#WORDCLOUD #id{uid} \n' \
                     f'群组 ID：`{group}`\n' \
                     f'用户 ID：`{uid}`\n' \
                     f'执行操作：`生成用户词云`\n' \
@@ -89,7 +89,7 @@ def do_user_task():
         except Exception as e:
             print("群组: {} | 用户: {} | 处理失败，可能是机器人已经被移出群组，请检查报错！".format(group, uid))
             print(e)
-            ctext = f'#WORDCLOUD #SCHEDULE #{uid} \n' \
+            ctext = f'#WORDCLOUD #SCHEDULE #id{uid} \n' \
                     f'群组 ID：`{group}`\n' \
                     f'用户 ID：`{uid}`\n' \
                     f'执行操作：`生成用户词云`\n' \
@@ -261,9 +261,6 @@ def generate_user(group, uid):
 
     # 获取消息总数
     total_message_amount = r.get("{}_{}_user_message_amount".format(group, uid))
-    # 获取用户发言数字典
-    user_message_amount = r.hgetall("{}_{}_user_message_amount".format(group, uid))
-    user_message_amount = sorted(user_message_amount.items(), key=lambda kv: (int(kv[1])), reverse=True)
 
     # 截至时间
     date = time.strftime("%Y年%m月%d日", time.localtime()) + ' ⏱ ' + time.strftime("%H:%M", time.localtime())
