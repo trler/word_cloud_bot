@@ -62,6 +62,8 @@ def rank(update, context):
             try:
                 chat_member = bot.get_chat_member(chat_id, user_id)
                 status = chat_member["status"]
+                if user_id == 1087968824:
+                    status = "administrator"
                 print("此用户在群组中身份为： {}".format(status))
                 if status == "creator" or status == "administrator":
                     print("用户权限正确")
