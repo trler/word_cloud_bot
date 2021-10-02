@@ -8,7 +8,7 @@ import telegram
 import time
 import os
 import connector
-from config import TOKEN, FRONT, CHANNEL
+from config import TOKEN, FRONT, CHANNEL, SKIP_SCHEDULE_GROUP
 
 bot = telegram.Bot(token=TOKEN)
 
@@ -29,7 +29,10 @@ def schedule_task():
         for group in group_list:
             try:
                 # 向任务队列中添加任务
-                task_queue.put(group)
+                if int(group) not in SKIP_SCHEDULE_GROUP:
+                    task_queue.put(group)
+                else:
+                    print(f"已跳过群组 {group} 的定时任务执行。")
             except Exception as e:
                 print("群组：{} | 词云数据分析生成失败，请查看报错信息".format(group))
                 print(e)
@@ -132,7 +135,7 @@ def generate(group):
         # print(word + "\t" + flag)
         if flag in ["n", "nr", "nz", "PER", "f", "ns", "LOC", "s", "nt", "ORG", "nw"]:
             # 判断该词是否有效，不为空格
-            if re.match(r"^\s+?$", word) is None:
+            if re.match(r"^\s+?$", word) is None and len(word) > 1:
                 word_list.append(word)
         # print(word_list)
 

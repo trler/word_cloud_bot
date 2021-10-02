@@ -9,6 +9,9 @@ EXCLUSIVE_MODE = False
 # 配置私有模式群组id列表（不私有请忽略） 例如：[-1001324252532, -100112415423]
 EXCLUSIVE_LIST = []
 
+# 跳过定时词云的群组
+SKIP_SCHEDULE_GROUP = []
+
 # 主动触发命令仅管理员有效  False:否     True:是
 RANK_COMMAND_MODE = True
 
